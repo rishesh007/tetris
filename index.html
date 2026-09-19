@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0d14">
+  <meta name="description" content="Play classic retro-arcade Tetris online on mobile and desktop. Zero dependencies, offline PWA, responsive touch controls.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self';">
+  <title>Tetris Arcade</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="arcade-wrapper">
+    <header class="game-header">
+      <h1 class="logo-text">TETRIS<span class="logo-accent">.JS</span></h1>
+      <div class="header-status">
+        <button id="btn-sound" class="icon-button" title="Toggle Sound" aria-label="Toggle Sound">🔊</button>
+        <button id="btn-pause" class="icon-button" title="Pause Game" aria-label="Pause Game">⏸</button>
+        <button id="btn-restart" class="icon-button" title="Restart Game" aria-label="Restart Game">🔄</button>
+      </div>
+    </header>
+
+    <main class="game-layout">
+      <!-- Left Column: Hold & Statistics -->
+      <aside class="side-panel left-panel">
+        <div class="panel-box hold-box">
+          <h2 class="panel-title">HOLD</h2>
+          <canvas id="hold-canvas" width="100" height="100"></canvas>
+          <span class="key-hint">[C / Shift]</span>
+        </div>
+
+        <div class="panel-box stats-box">
+          <div class="stat-item">
+            <span class="stat-label">SCORE</span>
+            <span id="stat-score" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">BEST</span>
+            <span id="stat-high-score" class="stat-value highlight">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">LINES</span>
+            <span id="stat-lines" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">LEVEL</span>
+            <span id="stat-level" class="stat-value">1</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Column: Main Game Board -->
+      <section class="board-container">
+        <div class="canvas-frame">
+          <canvas id="tetris-canvas" width="300" height="600"></canvas>
+          <!-- In-canvas overlays handled dynamically via DOM -->
+          <div id="overlay-screen" class="overlay-screen hidden">
+            <div id="overlay-content" class="overlay-card">
+              <h2 id="overlay-title">GAME OVER</h2>
+              <p id="overlay-message">Final Score: 0</p>
+              <button id="overlay-btn-action" class="primary-btn">PLAY AGAIN</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Next Queue & Instructions -->
+      <aside class="side-panel right-panel">
+        <div class="panel-box next-box">
+          <h2 class="panel-title">NEXT</h2>
+          <canvas id="next-canvas" width="100" height="260"></canvas>
+        </div>
+
+        <div class="panel-box help-box">
+          <h3 class="panel-subtitle">CONTROLS</h3>
+          <ul class="controls-list">
+            <li><kbd>←</kbd> <kbd>→</kbd> Move</li>
+            <li><kbd>↑</kbd> / <kbd>X</kbd> Rotate CW</li>
+            <li><kbd>Z</kbd> Rotate CCW</li>
+            <li><kbd>↓</kbd> Soft Drop</li>
+            <li><kbd>Space</kbd> Hard Drop</li>
+            <li><kbd>C</kbd> / <kbd>Shift</kbd> Hold</li>
+            <li><kbd>P</kbd> / <kbd>Esc</kbd> Pause</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Creative Mobile Arcade Gamepad Deck -->
+    <nav class="mobile-touch-deck" aria-label="Touch Gamepad Controls">
+      <!-- Quick Utility & Special Action Ribbon -->
+      <div class="deck-ribbon">
+        <button id="touch-hold" class="deck-btn deck-btn-hold" aria-label="Hold Piece">
+          <span class="btn-icon">⇄</span>
+          <span class="btn-label">HOLD</span>
+        </button>
+        <button id="touch-pause" class="deck-btn deck-btn-util" aria-label="Pause or Resume">
+          <span class="btn-icon" id="touch-pause-icon">⏸</span>
+          <span class="btn-label" id="touch-pause-label">PAUSE</span>
+        </button>
+        <button id="touch-restart" class="deck-btn deck-btn-util" aria-label="Restart Game">
+          <span class="btn-icon">🔄</span>
+          <span class="btn-label">RESET</span>
+        </button>
+        <button id="touch-sound" class="deck-btn deck-btn-util" aria-label="Toggle Sound">
+          <span class="btn-icon" id="touch-sound-icon">🔊</span>
+          <span class="btn-label" id="touch-sound-label">SOUND</span>
+        </button>
+        <button id="touch-rot-180" class="deck-btn deck-btn-special" aria-label="180 Degree Flip">
+          <span class="btn-icon">⟲</span>
+          <span class="btn-label">180°</span>
+        </button>
+      </div>
+
+      <!-- Main Dual-Thumb Controller Zones -->
+      <div class="deck-main-zones">
+        <!-- Left Thumb Zone: Directional Movement & Soft Drop -->
+        <div class="thumb-zone zone-left" aria-label="Directional Controls">
+          <div class="zone-label">MOVE & SOFT DROP</div>
+          <div class="dpad-grid">
+            <button id="touch-left" class="game-btn dpad-btn dpad-left" aria-label="Move Left">
+              <span class="btn-symbol">◀</span>
+              <span class="btn-caption">LEFT</span>
+            </button>
+            <button id="touch-down" class="game-btn dpad-btn dpad-down" aria-label="Soft Drop">
+              <span class="btn-symbol">▼</span>
+              <span class="btn-caption">DOWN</span>
+            </button>
+            <button id="touch-right" class="game-btn dpad-btn dpad-right" aria-label="Move Right">
+              <span class="btn-symbol">▶</span>
+              <span class="btn-caption">RIGHT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Thumb Zone: Rotations & Instant Slam Drop -->
+        <div class="thumb-zone zone-right" aria-label="Action Controls">
+          <div class="zone-label">ROTATE & SLAM DROP</div>
+          <div class="action-grid">
+            <button id="touch-rot-ccw" class="game-btn action-btn btn-ccw" aria-label="Rotate Counter-Clockwise">
+              <span class="btn-symbol">↺</span>
+              <span class="btn-caption">CCW</span>
+            </button>
+            <button id="touch-rot-cw" class="game-btn action-btn btn-cw primary-action" aria-label="Rotate Clockwise">
+              <span class="btn-symbol">↻</span>
+              <span class="btn-caption">ROTATE</span>
+            </button>
+            <button id="touch-hard-drop" class="game-btn action-btn btn-hard-drop" aria-label="Hard Drop">
+              <span class="btn-symbol">⤓</span>
+              <span class="btn-caption">HARD DROP</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="tetris.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

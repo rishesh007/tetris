@@ -1,0 +1,17 @@
+{
+  "name": "Tetris Arcade",
+  "short_name": "Tetris",
+  "description": "Retro-arcade Tetris web game built with vanilla JavaScript and Canvas",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c0d14",
+  "theme_color": "#0c0d14",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
